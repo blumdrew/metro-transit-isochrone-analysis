@@ -1,1 +1,380 @@
-<h1>lorem ipsum</h1>
+<!DOCTYPE html>
+<!-- https://docs.mapbox.com/mapbox-gl-js/example/updating-choropleth/ -->
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Beaverton Isochrone Map</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+</head>
+
+<body>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+    
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
+    #map {
+        position: absolute;
+        top: 100px;
+        bottom: 170px;
+        width: 100%;
+    }
+
+    h3 {
+        font-size: 16px;
+        font-family: 'Roboto';
+    }
+
+    h2 {
+        font-size: 18px;
+        font-family: 'Roboto';
+    }
+    h4 {
+        font-size: 14px;
+        font-family: 'Roboto';
+    }
+
+    .map-title {
+        font-family: 'Roboto';
+        position: relative;
+        text-align: center;
+        font-size: 24px;
+    }
+    .legend {
+        font-family: 'Roboto';
+        position: fixed;
+        border-radius: 10px;
+        top: 110px;
+        left: 10px;
+        margin: 10px; 
+        width: 120px;
+        background-color: #fff;
+        padding: 10px 10px;
+        z-index: 1002;
+        opacity: 1;
+    }
+    .data-selector {
+        font-family: 'Roboto';
+        position: fixed;
+        border-radius: 10px;
+        top: 110px;
+        right: 10px;
+        margin: 10px; 
+        width: 120px;
+        height: 300px;
+        background-color: #fff;
+        padding: 10px 10px;
+        z-index: 1002;
+        opacity: 1;
+    }
+
+    .content {
+        margin-bottom: 20px;
+    }
+
+    .column {
+        float: left;
+        width: 50%;
+    }
+    /* Clear floats after the columns */
+    .row:after {
+    content: "";
+    display: table;
+    clear: both;
+    }
+
+    .legend-box{
+        float: left;
+        height: 20px;
+        width: 20px;
+        margin-bottom: 15px;
+        border: 1px solid black;
+        clear: both;
+    }
+    .c1 {
+        background-color: #d95f0e;
+    }
+
+    .c2 {
+        background-color: #fec44f;
+    }
+
+    .c3 {
+        background-color: #fff7bc;
+    }
+
+    .label {
+        width: 30%;
+        display: inline-block;
+        text-align: center;
+        font-family: 'Roboto';
+    }
+
+    .full_screen {
+        font-family: 'Roboto';
+        position: fixed;
+        border-radius: 10px;
+        bottom: 12px;
+        right: 10px;
+        margin: 10px;
+        /*        width: 120px;*/
+        background-color: #fff;
+        padding: 10px 10px;
+        z-index: 1002;
+    }
+
+    /* bar chart html/css taken from: https://scouthtml.com/bar-chart-using-html-code/*/
+    .bar-chart {
+        font-family: 'Roboto';
+        list-style: none; /* Remove bullet points */
+        padding: 0;
+        bottom: 0px;
+        width: 50%;
+        left: 10px;
+        position: absolute;
+    }
+    .bar-chart-right {
+        font-family: 'Roboto';
+        list-style: none; /* Remove bullet points */
+        padding: 0;
+        bottom: 0px;
+        width: 50%;
+        right: 10px;
+        position: absolute;
+    }
+
+    .bar {
+        width: calc(var(--bar-width, 0%)); /* Use CSS variable for width */
+        height: 30px;
+        background-color: #ddd; /* Default bar color */
+        margin-bottom: 5px;
+        position: relative; /* For label positioning */
+        transition: width 0.3s ease; /* Smooth width transitions */
+        font-family: 'Roboto';
+    }
+
+    .bar::before {
+        content: attr(data-value)"%"; /* Display value as label */
+        position: absolute;
+        top: 50%;
+        right: -52px;
+        transform: translateY(-50%); /* Center vertically */
+        font-family: 'Roboto';
+    }
+
+    .bar-chart-title {
+        font-family: 'Roboto';
+        font-size: 16px;
+        font-weight: bold;
+        position: absolute;
+        bottom: 120px;
+        width: 50%;
+        left: 10px;
+        margin-right: 10px;
+    }
+    .bar-chart-title-right {
+        font-family: 'Roboto';
+        font-size: 16px;
+        font-weight: bold;
+        position: absolute;
+        bottom: 120px;
+        width: 50%;
+        right: 10px;
+    }
+
+    /* Legend details */
+    </style>
+    <!-- Load the `mapbox-gl-geocoder` plugin. -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
+    <div id="map-title" class="map-title"><h1>Metro Regional Center Transit Access</h1></div>
+    <div id="map"></div>
+    <div id="map-legend" class="legend">
+        <div id="map-legend-guide">
+            <div><h3>Legend</h3></div>
+            <div><div class="legend-box c1"></div><h4>Reachable on transit, 2025</h4></div>
+            <div><div class="legend-box c2"></div><h4>Reachable on transit, 2019</h4></div>
+            <div><div class="legend-box c3"></div><h4>Reachable on transit, 2013</h4></div>
+        </div>
+        <div id="map-legend-text"></div>
+    </div>
+    <div id="data-selector" class="data-selector">
+        <div id="regional_center_radio"><h3>Select a Regional Center</h3>
+        <input type="radio" id="downtown" name="regional_center" value="downtown">
+        <label for="downtown">Downtown</label><br>
+        <input type="radio" id="gateway" name="regional_center" value="gateway">
+        <label for="gateway">Gateway</label><br>
+        <input type="radio" id="gresham" name="regional_center" value="gresham">
+        <label for="gresham">Gresham</label><br>
+        <input type="radio" id="clackamas" name="regional_center" value="clackamas">
+        <label for="clackamas">Clackamas</label><br>
+        <input type="radio" id="oregon_city" name="regional_center" value="oregon_city">
+        <label for="oregon_city">Oregon City</label><br>
+        <input type="radio" id="beaverton" name="regional_center" value="beaverton">
+        <label for="beaverton">Beaverton</label><br>
+        <input type="radio" id="hillsboro" name="regional_center" value="hillsboro">
+        <label for="hillsboro">Hillsboro</label><br>
+        <input type="radio" id="tanasbourne" name="regional_center" value="tanasbourne">
+        <label for="tanasbourne">Tanasbourne</label><br>
+        <input type="radio" id="washington_square" name="regional_center" value="washington_square">
+        <label for="washington_square">Washington Square</label><br>
+        </div>
+    </div>
+    <div id="bar-chart-header" class="bar-chart-title">Residents in area<hr></div>
+    <div id="bar-chart-right-header" class="bar-chart-title-right">Jobs in area<hr></div>
+    <div id="bar-chart-container">
+        <ul class="bar-chart-right">
+            <li id="jobs-2025" class="bar" data-value="70">2025</li>
+            <li id="jobs-2019" class="bar" data-value="90">2019</li>
+            <li id="jobs-2013" class="bar" data-value="50">2013</li>
+        </ul>
+        <ul class="bar-chart">
+            <li id="hhs-2025" class="bar" data-value="70">2025</li>
+            <li id="hhs-2019" class="bar" data-value="90">2019</li>
+            <li id="hhs-2013" class="bar" data-value="50">2013</li>
+        </ul>
+    </div>
+     
+
+    <!-- Initialize Map -->
+    <script>
+    /*
+    const bars = document.querySelectorAll('.bar');
+    bars.forEach(bar => {
+        const value = bar.dataset.value;
+        bar.style.setProperty('--bar-width', `${value}%`);
+    });*/
+	mapboxgl.accessToken = 'pk.eyJ1IjoiYmx1bWRyZXciLCJhIjoiY203bnZqcmc1MDU3czJtcHVtOWtuejg3cyJ9.BtyyyhiVLkUXZJP06fW7Aw';
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/dark-v11',
+        center: [-122.8, 45.5],
+        minZoom: 5,
+        zoom: 9,
+        attributionControl: false
+    });
+    var allow_mousemove = true
+    var radio_button_value = document.querySelector('input[name="regional_center"]:checked').value
+    map.on('load',() => {
+        // Make pointer default
+        map.getCanvas().style.cursor = 'default';
+
+        var year_reachable
+        var lng
+        var lat
+        var pt
+        map.on('mousemove', (event) => {
+            const hoverit = map.queryRenderedFeatures(event.point, {
+                layers: ['center-interior']
+            });
+            // set data in legend
+            lng = event.lngLat["lng"].toFixed(5)
+            lat = event.lngLat["lat"].toFixed(5)
+            pt = `(${lat}, ${lng})`
+            
+            if ((hoverit.length == 0) & (allow_mousemove == true)) {
+                // do nothing
+                document.getElementById('map-legend-text').innerHTML = `<small>Point ${pt} not reachable</small>`
+            } else if ((hoverit.length == 1) & (allow_mousemove == true)) {
+                year_reachable = hoverit[0].properties.year
+                document.getElementById('map-legend-text').innerHTML = `<small>Point ${pt} reachable in ${year_reachable} only</small>`
+            } else if ((hoverit.length == 2) & (allow_mousemove == true)) {
+                year_reachable = `${hoverit[0].properties.year}, ${hoverit[1].properties.year}`
+                document.getElementById('map-legend-text').innerHTML = `<small>Point ${pt} reachable in ${year_reachable}</small>`
+            } else if ((hoverit.length == 3) & (allow_mousemove == true)) {
+                document.getElementById('map-legend-text').innerHTML = `<small>Point ${pt} reachable in 2025, 2019, 2013</small>`
+            }
+        });
+
+        // add tileset
+        map.addSource('metro_centers', {
+            'type': 'vector',
+            'url': 'mapbox://blumdrew.metro_center_tileset_v3' // change as needed
+        });
+        map.addLayer({
+                'id': 'center-line',
+                'source': 'metro_centers',
+                'source-layer': 'metro_centers', //change as needed
+                'type': 'line',
+                'filter': ['==', 'center', radio_button_value],
+                layout: {
+                    visibility: 'visible'
+                },
+                paint: {
+                    'line-color': [
+                        'match',
+                        ['get', 'year'],
+                        '2025',
+                        '#d95f0e',
+                        '2019',
+                        '#fec44f',
+                        '2013',
+                        '#fff7bc',
+                        /* other */ '#ccc'
+                    ],
+                }
+            },
+            'continent-label' // Add layer below labels
+        );
+        map.addLayer({
+                'id': 'center-interior',
+                'source': 'metro_centers',
+                'source-layer': 'metro_centers', //change as needed
+                'type': 'fill',
+                'filter': ['==', 'center', radio_button_value],
+                layout: {
+                    visibility: 'visible'
+                },
+                paint: {
+                    'fill-color':"#ffffff",
+                    'fill-opacity':0.1
+                }
+            },
+            'continent-label' // Add layer below labels
+        );
+        // future: limit when mousemove edits legend
+        /*map.on("click", () =>{
+            allow_mousemove = !allow_mousemove
+        })*/
+    })
+    map.on("click", (event) => {
+        console.log(document.querySelector('input[name="regional_center"]:checked').value)
+    })
+    map.on("idle", () =>{
+        radio_button_value = document.querySelector('input[name="regional_center"]:checked').value
+        map.setFilter('center-interior',['==', 'center', radio_button_value])
+        map.setFilter('center-line',['==', 'center', radio_button_value])
+        features = map.queryRenderedFeatures({layers:['center-line']})
+        //console.log(features)
+        var properties = features.map(features => features.properties);
+        var years = properties.map(properties => properties['year']);
+        var jobs = properties.map(properties => properties['jobs_fmt']);
+        var hhs = properties.map(properties => properties['population_fmt']);
+        idx_2025 = years.indexOf("2025")
+        idx_2019 = years.indexOf("2019")
+        idx_2013 = years.indexOf("2013")
+
+        document.getElementById('jobs-2025').dataset.value = jobs[idx_2025]
+        document.getElementById('jobs-2019').dataset.value = jobs[idx_2019]
+        document.getElementById('jobs-2013').dataset.value = jobs[idx_2013]
+        document.getElementById('hhs-2025').dataset.value = hhs[idx_2025]
+        document.getElementById('hhs-2019').dataset.value = hhs[idx_2019]
+        document.getElementById('hhs-2013').dataset.value = hhs[idx_2013]
+
+        const bars = document.querySelectorAll('.bar');
+        bars.forEach(bar => {
+            const value = bar.dataset.value;
+            bar.style.setProperty('--bar-width', `${value}%`);
+        });
+    })
+    
+</script>
+
+</body>
+</html>
