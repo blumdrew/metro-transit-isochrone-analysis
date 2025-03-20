@@ -50,7 +50,7 @@
         font-family: 'Roboto';
         position: fixed;
         border-radius: 10px;
-        top: 110px;
+        top: 90px;
         left: 10px;
         margin: 10px; 
         width: 120px;
@@ -63,15 +63,20 @@
         font-family: 'Roboto';
         position: fixed;
         border-radius: 10px;
-        top: 110px;
+        top: 90px;
         right: 10px;
         margin: 10px; 
         width: 120px;
-        height: 300px;
+        height: 320px;
         background-color: #fff;
         padding: 10px 10px;
         z-index: 1002;
         opacity: 1;
+    }
+    .drop-down-menu{
+        font-family: 'Roboto';
+        font-size: 12px;
+        width: 100px;
     }
 
     .content {
@@ -96,6 +101,16 @@
         margin-bottom: 15px;
         border: 1px solid black;
         clear: both;
+    }
+    .legend-dot{
+        float: left;
+        height: 10px;
+        width: 10px;
+        margin-bottom: 5px;
+        background-color: #223b53;
+        border: 1px solid white;
+        clear: both;
+        border-radius: 50%;
     }
     .c1 {
         background-color: #d95f0e;
@@ -148,6 +163,15 @@
         right: 10px;
         position: absolute;
     }
+    .bar-chart-detail {
+        font-family: 'Roboto';
+        list-style: none; /* Remove bullet points */
+        padding: 0px;
+        bottom: 0px;
+        left: 0px;
+        width: 120px;
+        position: relative;
+    }
 
     .bar {
         width: calc(var(--bar-width, 0%)); /* Use CSS variable for width */
@@ -164,6 +188,23 @@
         position: absolute;
         top: 50%;
         right: -52px;
+        transform: translateY(-50%); /* Center vertically */
+        font-family: 'Roboto';
+    }
+    
+    .bar-detail {
+        width: calc(var(--bar-width, 0%)); /* Use CSS variable for width */
+        height: 18px;
+        margin-bottom: 5px;
+        position: relative; /* For label positioning */
+        transition: width 0.3s ease; /* Smooth width transitions */
+        font-family: 'Roboto';
+        border: 1px solid black;
+    }
+    .bar-detail::before {
+        position: absolute;
+        top: 50%;
+        right: 0px;
         transform: translateY(-50%); /* Center vertically */
         font-family: 'Roboto';
     }
@@ -187,8 +228,6 @@
         width: 50%;
         right: 10px;
     }
-
-    /* Legend details */
     </style>
     <!-- Load the `mapbox-gl-geocoder` plugin. -->
     <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
@@ -198,32 +237,48 @@
     <div id="map-legend" class="legend">
         <div id="map-legend-guide">
             <div><h3>Legend</h3></div>
+            <hr>
             <div><div class="legend-box c1"></div><h4>Reachable on transit, 2025</h4></div>
             <div><div class="legend-box c2"></div><h4>Reachable on transit, 2019</h4></div>
             <div><div class="legend-box c3"></div><h4>Reachable on transit, 2013</h4></div>
+            <hr>
+            <div><div class="legend-dot"></div><h4>Center Location</h4></div>
+            <hr>
         </div>
-        <div id="map-legend-text"></div>
+        <div id="map-legend-text"><small><i>Hover over the map for details</i></small></div>
     </div>
     <div id="data-selector" class="data-selector">
-        <div id="regional_center_radio"><h3>Select a Regional Center</h3>
-        <input type="radio" id="downtown" name="regional_center" value="downtown">
-        <label for="downtown">Downtown</label><br>
-        <input type="radio" id="gateway" name="regional_center" value="gateway">
-        <label for="gateway">Gateway</label><br>
-        <input type="radio" id="gresham" name="regional_center" value="gresham">
-        <label for="gresham">Gresham</label><br>
-        <input type="radio" id="clackamas" name="regional_center" value="clackamas">
-        <label for="clackamas">Clackamas</label><br>
-        <input type="radio" id="oregon_city" name="regional_center" value="oregon_city">
-        <label for="oregon_city">Oregon City</label><br>
-        <input type="radio" id="beaverton" name="regional_center" value="beaverton">
-        <label for="beaverton">Beaverton</label><br>
-        <input type="radio" id="hillsboro" name="regional_center" value="hillsboro">
-        <label for="hillsboro">Hillsboro</label><br>
-        <input type="radio" id="tanasbourne" name="regional_center" value="tanasbourne">
-        <label for="tanasbourne">Tanasbourne</label><br>
-        <input type="radio" id="washington_square" name="regional_center" value="washington_square">
-        <label for="washington_square">Washington Square</label><br>
+        <label for="region-selector">Select a regional center:</label>
+        <select name="region-selector" id="region-selector" class="drop-down-menu">
+            <option value="downtown">Downtown</option>
+            <option value="gateway">Gateway</option>
+            <option value="gresham">Gresham</option>
+            <option value="clackamas">Clackamas</option>
+            <option value="oregon_city">Oregon City</option>
+            <option value="beaverton">Beaverton</option>
+            <option value="washington_square">Washington Square</option>
+            <option value="tanasbourne">Tanasbourne</option>
+            <option value="hillsboro">Hillsboro</option>
+        </select>
+        <div id="regional-center-details">
+            <hr>
+            <div class="h4"><small>Households:</small></div>
+            <div id="hhs-detail-container">
+                <ul class="bar-chart-detail">
+                    <li id="hhs-2025-detail" class="bar-detail c1" data-value="100"><small>2025</small></li>
+                    <li id="hhs-2019-detail" class="bar-detail c2" data-value="50">2019</li>
+                    <li id="hhs-2013-detail" class="bar-detail c3" data-value="25">2013</li>
+                </ul>
+            </div>
+            <hr>
+            <div class="h4"><small>Jobs:</small></div>
+            <div id="jobs-detail-container">
+                <ul class="bar-chart-detail">
+                    <li id="jobs-2025-detail" class="bar-detail c1" data-value="100">2025</li>
+                    <li id="jobs-2019-detail" class="bar-detail c2" data-value="50">2019</li>
+                    <li id="jobs-2013-detail" class="bar-detail c3" data-value="25">2013</li>
+                </ul>
+            </div>
         </div>
     </div>
     <div id="bar-chart-header" class="bar-chart-title">Residents in area<hr></div>
@@ -244,27 +299,28 @@
 
     <!-- Initialize Map -->
     <script>
-    /*
-    const bars = document.querySelectorAll('.bar');
+    
+    const bars = document.querySelectorAll('.bar-detail');
     bars.forEach(bar => {
         const value = bar.dataset.value;
         bar.style.setProperty('--bar-width', `${value}%`);
-    });*/
+    });
 	mapboxgl.accessToken = 'pk.eyJ1IjoiYmx1bWRyZXciLCJhIjoiY203bnZqcmc1MDU3czJtcHVtOWtuejg3cyJ9.BtyyyhiVLkUXZJP06fW7Aw';
     const map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/dark-v11',
-        center: [-122.8, 45.5],
+        center: [-122.7, 45.5],
         minZoom: 5,
         zoom: 9,
         attributionControl: false
     });
     var allow_mousemove = true
-    var radio_button_value
-    if (document.querySelector('input[name="regional_center"]:checked') === null) {
-        radio_button_value = "downtown"
+    var drop_down_value
+    console.log(document.getElementById("region-selector").value)
+    if (document.getElementById("region-selector").value === null) {
+        drop_down_value = "downtown"
     } else {
-        radio_button_value = document.querySelector('input[name="regional_center"]:checked').value
+        drop_down_value = document.getElementById("region-selector").value
     }
 
     map.on('load',() => {
@@ -280,8 +336,8 @@
                 layers: ['center-interior']
             });
             // set data in legend
-            lng = event.lngLat["lng"].toFixed(5)
-            lat = event.lngLat["lat"].toFixed(5)
+            lng = event.lngLat["lng"].toFixed(4)
+            lat = event.lngLat["lat"].toFixed(4)
             pt = `(${lat}, ${lng})`
             
             if ((hoverit.length == 0) & (allow_mousemove == true)) {
@@ -295,20 +351,26 @@
                 document.getElementById('map-legend-text').innerHTML = `<small>Point ${pt} reachable in ${year_reachable}</small>`
             } else if ((hoverit.length == 3) & (allow_mousemove == true)) {
                 document.getElementById('map-legend-text').innerHTML = `<small>Point ${pt} reachable in 2025, 2019, 2013</small>`
+            } else {
+                document.getElementById('map-legend-text').innerHTML = `<small><i>Hover over an area for details</i></small>`
             }
         });
 
-        // add tileset
+        // add tilesets
         map.addSource('metro_centers', {
             'type': 'vector',
-            'url': 'mapbox://blumdrew.metro_center_tileset_v3' // change as needed
+            'url': 'mapbox://blumdrew.metro_center_tileset_v4' // change as needed
+        });
+        map.addSource('metro_center_points', {
+            'type': 'vector',
+            'url': 'mapbox://blumdrew.metro_center_points_v4' // change as needed
         });
         map.addLayer({
                 'id': 'center-line',
                 'source': 'metro_centers',
                 'source-layer': 'metro_centers', //change as needed
                 'type': 'line',
-                'filter': ['==', 'center', radio_button_value],
+                'filter': ['==', 'center', drop_down_value],
                 layout: {
                     visibility: 'visible'
                 },
@@ -333,7 +395,7 @@
                 'source': 'metro_centers',
                 'source-layer': 'metro_centers', //change as needed
                 'type': 'fill',
-                'filter': ['==', 'center', radio_button_value],
+                'filter': ['==', 'center', drop_down_value],
                 layout: {
                     visibility: 'visible'
                 },
@@ -344,22 +406,34 @@
             },
             'continent-label' // Add layer below labels
         );
-        // future: limit when mousemove edits legend
-        /*map.on("click", () =>{
-            allow_mousemove = !allow_mousemove
-        })*/
+        map.addLayer({
+                'id': 'center-point',
+                'source': 'metro_center_points',
+                'source-layer': 'metro_center_points', //change as needed
+                'type': 'circle',
+                'filter': ['==', 'center', drop_down_value],
+                paint: {
+                    'circle-radius': 3,
+                    'circle-color': '#223b53',
+                    'circle-stroke-color': 'white',
+                    'circle-stroke-width': 1,
+                    'circle-opacity': 0.5
+                }
+            },
+            'continent-label' // Add layer below labels
+        );
     })
-    map.on("click", (event) => {
-        console.log(document.querySelector('input[name="regional_center"]:checked').value)
-    })
-    console.log(radio_button_value)
+    
     map.on("idle", () =>{
-        radio_button_value = document.querySelector('input[name="regional_center"]:checked').value
-        console.log(radio_button_value)
-        map.setFilter('center-interior',['==', 'center', radio_button_value])
-        map.setFilter('center-line',['==', 'center', radio_button_value])
+        //// UPDATE MAP FILTERS
+        drop_down_value = document.getElementById("region-selector").value
+        map.setFilter('center-interior',['==', 'center', drop_down_value])
+        map.setFilter('center-line',['==', 'center', drop_down_value])
+        map.setFilter('center-point',['==', 'center', drop_down_value])
+        
+        //// UPDATE BAR CHARTS
+        // bottom charts:
         features = map.queryRenderedFeatures({layers:['center-line']})
-        //console.log(features)
         var properties = features.map(features => features.properties);
         var years = properties.map(properties => properties['year']);
         var jobs = properties.map(properties => properties['jobs_fmt']);
@@ -380,7 +454,33 @@
             const value = bar.dataset.value;
             bar.style.setProperty('--bar-width', `${value}%`);
         });
+        // legend charts
+        var jobs_total = properties.map(properties => properties['jobs_total']);
+        var hhs_total = properties.map(properties => properties['population_total']);
+        var jobs_max = Math.max(...jobs_total)
+        var hhs_max = Math.max(...hhs_total)
+        document.getElementById('jobs-2025-detail').innerHTML = Number(jobs_total[idx_2025]).toLocaleString()
+        document.getElementById('jobs-2019-detail').innerHTML = Number(jobs_total[idx_2019]).toLocaleString()
+        document.getElementById('jobs-2013-detail').innerHTML = Number(jobs_total[idx_2013]).toLocaleString()
+        document.getElementById('hhs-2025-detail').innerHTML = Number(hhs_total[idx_2025]).toLocaleString()
+        document.getElementById('hhs-2019-detail').innerHTML = Number(hhs_total[idx_2019]).toLocaleString()
+        document.getElementById('hhs-2013-detail').innerHTML = Number(hhs_total[idx_2013]).toLocaleString()
+
+        document.getElementById('jobs-2025-detail').dataset.value = (100*jobs_total[idx_2025]) / jobs_max
+        document.getElementById('jobs-2019-detail').dataset.value = (100*jobs_total[idx_2019]) / jobs_max
+        document.getElementById('jobs-2013-detail').dataset.value = (100*jobs_total[idx_2013]) / jobs_max
+        document.getElementById('hhs-2025-detail').dataset.value = (100*hhs_total[idx_2025]) / hhs_max
+        document.getElementById('hhs-2019-detail').dataset.value = (100*hhs_total[idx_2019]) / hhs_max
+        document.getElementById('hhs-2013-detail').dataset.value = (100*hhs_total[idx_2013]) / hhs_max
+        const bars_detail = document.querySelectorAll('.bar-detail');
+        bars_detail.forEach(bar => {
+            const value = bar.dataset.value;
+            bar.style.setProperty('--bar-width', `${value}%`);
+        });
     })
+    map.addControl(new mapboxgl.AttributionControl({
+        customAttribution: 'Map: Andrew Lindstrom | Source: Metro RLIS, US Census Bureau'
+    }));
     
 </script>
 
