@@ -9,3 +9,204 @@
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
 </head>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+    
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
+    #map {
+        position: absolute;
+        top: 70px;
+        bottom: 10px;
+        width: 100%;
+    }
+
+    h3 {
+        font-size: 16px;
+        font-family: 'Roboto';
+    }
+
+    h2 {
+        font-size: 18px;
+        font-family: 'Roboto';
+    }
+    h4 {
+        font-size: 14px;
+        font-family: 'Roboto';
+    }
+
+    .map-title {
+        font-family: 'Roboto';
+        position: relative;
+        text-align: center;
+        font-size: 16px;
+    }
+    .legend {
+        font-family: 'Roboto';
+        position: fixed;
+        border-radius: 10px;
+        top: 110px;
+        left: 10px;
+        margin: 10px; 
+        width: 120px;
+        background-color: #fff;
+        padding: 10px 10px;
+        z-index: 1002;
+        opacity: 1;
+    }
+    .data-selector {
+        font-family: 'Roboto';
+        position: fixed;
+        border-radius: 10px;
+        top: 110px;
+        right: 10px;
+        margin: 10px; 
+        width: 120px;
+        height: 300px;
+        background-color: #fff;
+        padding: 10px 10px;
+        z-index: 1002;
+        opacity: 1;
+    }
+
+    .content {
+        margin-bottom: 20px;
+    }
+
+    .column {
+        float: left;
+        width: 50%;
+    }
+    /* Clear floats after the columns */
+    .row:after {
+    content: "";
+    display: table;
+    clear: both;
+    }
+
+    
+    .row {
+        height: 12px;
+        width: 100%;
+    }
+
+    .colors {
+        background: linear-gradient(to right,
+            #FFFFFF,
+            #fecc5c,
+            #fd8d3c,
+            #f03b20,
+            #51087e);
+        margin-bottom: 5px;
+    }
+
+    .label {
+        width: 30%;
+        display: inline-block;
+        text-align: center;
+        font-family: 'Roboto';
+    }
+
+    .full_screen {
+        font-family: 'Roboto';
+        position: fixed;
+        border-radius: 10px;
+        bottom: 12px;
+        right: 10px;
+        margin: 10px;
+        /*        width: 120px;*/
+        background-color: #fff;
+        padding: 10px 10px;
+        z-index: 1002;
+    }
+</style>
+<!-- Load the `mapbox-gl-geocoder` plugin. -->   
+<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
+<div id="map-title" class="map-title"><h1>Metro Regional Centers</h1></div>
+<div id="map"></div>
+<div id="legend" class="legend">
+    <h2>Legend</h2>
+    <div>Number of Jobs</div>
+    <div class="row colors"></div>
+    <div class="row labels">
+        <div class="label">0</div>
+        <div class="label"> </div>
+        <div class="label">90,000</div>
+    </div>
+    <div id="regional-center-detail"></div>
+</div>
+<script>
+	mapboxgl.accessToken = 'pk.eyJ1IjoiYmx1bWRyZXciLCJhIjoiY203bnZqcmc1MDU3czJtcHVtOWtuejg3cyJ9.BtyyyhiVLkUXZJP06fW7Aw';
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/dark-v11',
+        center: [-122.7, 45.5],
+        minZoom: 5,
+        zoom: 9.5,
+        attributionControl: false
+    });
+    
+    map.on('load',() =>{
+        map.getCanvas().style.cursor = 'default';
+
+        map.on('mousemove', (event) => {
+            const hoverit = map.queryRenderedFeatures(event.point, {
+                layers: ['metro_regional_centers']
+            });
+            // set data in legend
+            document.getElementById('regional-center-detail').innerHTML = hoverit.length ?
+            `<br><small><b>Center:</b> ${hoverit[0].properties.name}<br><b>Job Count:</b> ${hoverit[0].properties.jobs}</small>`:
+            `<br><small><i>Hover over an item for details</i></small>`
+        });
+
+        map.addSource('metro_centers', {
+            'type': 'vector',
+            'url': 'mapbox://blumdrew.regional_centers_v1' // change as needed
+        });
+
+        map.addLayer({
+                'id': 'metro_regional_centers',
+                'source': 'metro_centers',
+                'source-layer': 'metro_centers', //change as needed
+                'type': 'fill',
+                'paint': {
+                    'fill-color': [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'jobs'], // PUT NAME OF COLUMN TO DISPLAY HERE
+                        2000, "#FFFFFF",
+                        7500, "#fecc5c",
+                        10000, "#fd8d3c",
+                        15000, "#f03b20",
+                        150000, "#51087e"
+                    ],
+                    "fill-opacity":0.75 // PUT NAME OF COLUMN TO DISPLAY HERE
+                }
+            },
+            'continent-label' // Add layer below labels
+        );
+        map.addLayer({
+                'id': 'metro_regional_centers_outline',
+                'source': 'metro_centers',
+                'source-layer': 'metro_centers', //change as needed
+                'type': 'line',
+                'paint': {
+                    'line-color': "#ffffff"
+                }
+            },
+            'continent-label' // Add layer below labels
+        );
+
+    });
+    map.addControl(new mapboxgl.AttributionControl({
+        customAttribution: 'Map: Andrew Lindstrom | Source: Metro RLIS, US Census Bureau'
+    }));
+    
+</script>
+</body>
+</html>
