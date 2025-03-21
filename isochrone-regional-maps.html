@@ -3,7 +3,7 @@
 <html>
 
 <head>
-    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable = yes">
     <title>Isochrone Regional Maps</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
@@ -13,6 +13,95 @@
 <body>
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+    @media (max-width: 768px) {
+        .map-title {
+            position: absolute !important;
+            left: 2px !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            transform: none !important;
+            font-size: 10px !important;
+            top: 0px !important;
+            text-align: center;
+            right: auto !important;
+            word-wrap: break-word;
+        }
+
+        #map {
+            position: absolute;
+            top: 50px !important;
+            bottom: 170px;
+            width: 100%;
+        }
+        .data-selector {
+            font-family: 'Roboto';
+            position: fixed;
+            border-radius: 10px !important;
+            top: 55px !important;
+            right: auto !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            width: 90% !important;
+            height: auto !important;
+            background-color: #fff;
+            padding: 10px 0px 0px 10px !important;
+            z-index: 1002;
+            opacity: 1;
+        }
+
+        .bar-chart-detail {
+            font-family: 'Roboto';
+            list-style: none; /* Remove bullet points */
+            padding: 0px;
+            bottom: 0px;
+            left: 0px;
+            width: 75px !important;
+            position: relative;
+        }
+        .bar-detail {
+            width: calc(var(--bar-width, 0%)); /* Use CSS variable for width */
+            height: 16px !important;
+            margin-bottom: 5px !important;
+            position: relative; /* For label positioning */
+            transition: width 0.3s ease; /* Smooth width transitions */
+            font-family: 'Roboto';
+            border: 1px solid black;
+        }
+        .bar-detail::before {
+            position: absolute;
+            top: 50%;
+            right: 0px;
+            transform: translateY(-50%); /* Center vertically */
+            font-family: 'Roboto';
+        }
+        .drop-down-menu{
+            font-family: 'Roboto';
+            font-size: 12px;
+            width: 75px !important;
+        }
+        .legend-box{
+            float: left;
+            height: 8px !important;
+            width: 8px !important;
+            margin-bottom: 10px !important;
+            border: 1px solid black;
+            clear: both;
+        }
+        .legend-dot{
+            float: left;
+            height: 8px !important;
+            width: 8px !important;
+            margin-bottom: 5px;
+            background-color: #223b53;
+            border: 1px solid white;
+            clear: both;
+            border-radius: 50%;
+        }
+
+        
+    }
     
     body {
         margin: 0;
@@ -37,6 +126,10 @@
     }
     h4 {
         font-size: 14px;
+        font-family: 'Roboto';
+    }
+    h5 {
+        font-size: 8px;
         font-family: 'Roboto';
     }
 
@@ -89,9 +182,21 @@
     }
     /* Clear floats after the columns */
     .row:after {
-    content: "";
-    display: table;
-    clear: both;
+        content: "";
+        display: table;
+        clear: both;
+    }
+
+    .column-4 {
+        float: left;
+        width: 25%;
+    }
+
+    /* Clear floats after the columns */
+    .row-4:after {
+        content: "";
+        display: table;
+        clear: both;
     }
 
     .legend-box{
@@ -234,7 +339,23 @@
     <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
     <div id="map-title" class="map-title"><h1>Metro Regional Center Transit Access</h1></div>
     <div id="map"></div>
-    <div id="map-legend" class="legend">
+    <div id="map-legend-mobile" class="legend" style="display: none">
+        <div id="map-legend-guide-mobile">
+            <div id="legend-mobile-row" class="row">
+                <div id="legend-mobile-col-1" class="column">
+                    <div><h3><small>Legend</small></h3></div>
+                    <div><div class="legend-box c1"></div><h5>Reachable on transit, 2025</h5></div>
+                    <div><div class="legend-box c2"></div><h5>Reachable on transit, 2019</h5></div>
+                    <div><div class="legend-box c3"></div><h5>Reachable on transit, 2013</h5></div>
+                </div>
+                <div id="legend-mobile-col-1" class="column">
+                    <div><div class="legend-dot"></div><h5>Center Location</h5></div>
+                    <div id="map-legend-text-mobile"><small><i>Hover over the map for details</i></small></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="map-legend" class="legend" style="display: none">
         <div id="map-legend-guide">
             <div><h3>Legend</h3></div>
             <hr>
@@ -247,8 +368,8 @@
         </div>
         <div id="map-legend-text"><small><i>Hover over the map for details</i></small></div>
     </div>
-    <div id="data-selector" class="data-selector">
-        <label for="region-selector">Select a regional center:</label>
+    <div id="data-selector" class="data-selector" style="display: none">
+        <label for="region-selector"><b>Select a regional center:</b></label>
         <select name="region-selector" id="region-selector" class="drop-down-menu">
             <option value="downtown">Downtown</option>
             <option value="gateway">Gateway</option>
@@ -281,6 +402,50 @@
             </div>
         </div>
     </div>
+    <div id="data-selector-mobile" class="data-selector" style="display: none">
+        <div id="data-selector-mobile-row" class="row-4">
+            <div id="data-selector-mobile-col-1" class="column-4">
+                <label for="region-selector-mobile"><b>Select a regional center:</b></label>
+                <select name="region-selector-mobile" id="region-selector-mobile" class="drop-down-menu">
+                    <option value="downtown">Downtown</option>
+                    <option value="gateway">Gateway</option>
+                    <option value="gresham">Gresham</option>
+                    <option value="clackamas">Clackamas</option>
+                    <option value="oregon_city">Oregon City</option>
+                    <option value="beaverton">Beaverton</option>
+                    <option value="washington_square">Washington Square</option>
+                    <option value="tanasbourne">Tanasbourne</option>
+                    <option value="hillsboro">Hillsboro</option>
+                </select>
+            </div>
+            <div id="data-selector-mobile-col-2" class="column-4">
+                <div class="h4"><small>Households:</small></div>
+                <div id="hhs-detail-container">
+                    <ul class="bar-chart-detail">
+                        <li id="hhs-2025-detail-mobile" class="bar-detail c1" data-value="100"><small>2025</small></li>
+                        <li id="hhs-2019-detail-mobile" class="bar-detail c2" data-value="50">2019</li>
+                        <li id="hhs-2013-detail-mobile" class="bar-detail c3" data-value="25">2013</li>
+                    </ul>
+                </div>
+            </div>
+            <div id="data-selector-mobile-col-3" class="column-4">
+                <div class="h4"><small>Jobs:</small></div>
+                <div id="jobs-detail-container">
+                    <ul class="bar-chart-detail">
+                        <li id="jobs-2025-detail-mobile" class="bar-detail c1" data-value="100">2025</li>
+                        <li id="jobs-2019-detail-mobile" class="bar-detail c2" data-value="50">2019</li>
+                        <li id="jobs-2013-detail-mobile" class="bar-detail c3" data-value="25">2013</li>
+                    </ul>
+                </div>
+            </div>
+            <div id="data-selector-mobile-col-4" class="column-4"></divid>
+                <div><div class="legend-box c1"></div><h5>Reachable on transit, 2025</h5></div>
+                <div><div class="legend-box c2"></div><h5>Reachable on transit, 2019</h5></div>
+                <div><div class="legend-box c3"></div><h5>Reachable on transit, 2013</h5></div>
+                <div><div class="legend-dot"></div><h5>Center Location</h5></div>
+            </div>
+        </div>
+    </div>
     <div id="bar-chart-header" class="bar-chart-title">Residents in area<hr></div>
     <div id="bar-chart-right-header" class="bar-chart-title-right">Jobs in area<hr></div>
     <div id="bar-chart-container">
@@ -299,12 +464,18 @@
 
     <!-- Initialize Map -->
     <script>
+    const screenWidth = screen.width
+    const screenHeight = screen.height
+    // determine which legend and data picker to display based on screen width
+    if (screenWidth > 768) {
+        document.getElementById('map-legend').style.display = "block";
+        document.getElementById('data-selector').style.display = "block";
+    } else {
+        //document.getElementById('map-legend-mobile').style.display = "block";
+        document.getElementById('data-selector-mobile').style.display = "block";
+    }
+
     
-    const bars = document.querySelectorAll('.bar-detail');
-    bars.forEach(bar => {
-        const value = bar.dataset.value;
-        bar.style.setProperty('--bar-width', `${value}%`);
-    });
 	mapboxgl.accessToken = 'pk.eyJ1IjoiYmx1bWRyZXciLCJhIjoiY203bnZqcmc1MDU3czJtcHVtOWtuejg3cyJ9.BtyyyhiVLkUXZJP06fW7Aw';
     const map = new mapboxgl.Map({
         container: 'map',
@@ -316,11 +487,18 @@
     });
     var allow_mousemove = true
     var drop_down_value
-    console.log(document.getElementById("region-selector").value)
-    if (document.getElementById("region-selector").value === null) {
+
+    var drop_down_selection
+    if (screenWidth > 768) {
+        drop_down_selection = document.getElementById("region-selector").value
+    } else {
+        drop_down_selection = document.getElementById("region-selector-mobile").value
+    }
+
+    if (drop_down_selection === null) {
         drop_down_value = "downtown"
     } else {
-        drop_down_value = document.getElementById("region-selector").value
+        drop_down_value = drop_down_selection
     }
 
     map.on('load',() => {
@@ -354,6 +532,7 @@
             } else {
                 document.getElementById('map-legend-text').innerHTML = `<small><i>Hover over an area for details</i></small>`
             }
+            document.getElementById('map-legend-text-mobile').innerHTML = document.getElementById('map-legend-text').innerHTML
         });
 
         // add tilesets
@@ -426,7 +605,14 @@
     
     map.on("idle", () =>{
         //// UPDATE MAP FILTERS
-        drop_down_value = document.getElementById("region-selector").value
+        var old_drop_down = drop_down_value
+        if (screenWidth > 768){
+            drop_down_value = document.getElementById("region-selector").value
+        } else{
+            drop_down_value = document.getElementById("region-selector-mobile").value
+        }
+        
+        
         map.setFilter('center-interior',['==', 'center', drop_down_value])
         map.setFilter('center-line',['==', 'center', drop_down_value])
         map.setFilter('center-point',['==', 'center', drop_down_value])
@@ -459,19 +645,33 @@
         var hhs_total = properties.map(properties => properties['population_total']);
         var jobs_max = Math.max(...jobs_total)
         var hhs_max = Math.max(...hhs_total)
+        // value in chart
         document.getElementById('jobs-2025-detail').innerHTML = Number(jobs_total[idx_2025]).toLocaleString()
         document.getElementById('jobs-2019-detail').innerHTML = Number(jobs_total[idx_2019]).toLocaleString()
         document.getElementById('jobs-2013-detail').innerHTML = Number(jobs_total[idx_2013]).toLocaleString()
         document.getElementById('hhs-2025-detail').innerHTML = Number(hhs_total[idx_2025]).toLocaleString()
         document.getElementById('hhs-2019-detail').innerHTML = Number(hhs_total[idx_2019]).toLocaleString()
         document.getElementById('hhs-2013-detail').innerHTML = Number(hhs_total[idx_2013]).toLocaleString()
+        document.getElementById('jobs-2025-detail-mobile').innerHTML = Number(jobs_total[idx_2025]).toLocaleString()
+        document.getElementById('jobs-2019-detail-mobile').innerHTML = Number(jobs_total[idx_2019]).toLocaleString()
+        document.getElementById('jobs-2013-detail-mobile').innerHTML = Number(jobs_total[idx_2013]).toLocaleString()
+        document.getElementById('hhs-2025-detail-mobile').innerHTML = Number(hhs_total[idx_2025]).toLocaleString()
+        document.getElementById('hhs-2019-detail-mobile').innerHTML = Number(hhs_total[idx_2019]).toLocaleString()
+        document.getElementById('hhs-2013-detail-mobile').innerHTML = Number(hhs_total[idx_2013]).toLocaleString()
 
+        // width of chart
         document.getElementById('jobs-2025-detail').dataset.value = (100*jobs_total[idx_2025]) / jobs_max
         document.getElementById('jobs-2019-detail').dataset.value = (100*jobs_total[idx_2019]) / jobs_max
         document.getElementById('jobs-2013-detail').dataset.value = (100*jobs_total[idx_2013]) / jobs_max
         document.getElementById('hhs-2025-detail').dataset.value = (100*hhs_total[idx_2025]) / hhs_max
         document.getElementById('hhs-2019-detail').dataset.value = (100*hhs_total[idx_2019]) / hhs_max
         document.getElementById('hhs-2013-detail').dataset.value = (100*hhs_total[idx_2013]) / hhs_max
+        document.getElementById('jobs-2025-detail-mobile').dataset.value = (100*jobs_total[idx_2025]) / jobs_max
+        document.getElementById('jobs-2019-detail-mobile').dataset.value = (100*jobs_total[idx_2019]) / jobs_max
+        document.getElementById('jobs-2013-detail-mobile').dataset.value = (100*jobs_total[idx_2013]) / jobs_max
+        document.getElementById('hhs-2025-detail-mobile').dataset.value = (100*hhs_total[idx_2025]) / hhs_max
+        document.getElementById('hhs-2019-detail-mobile').dataset.value = (100*hhs_total[idx_2019]) / hhs_max
+        document.getElementById('hhs-2013-detail-mobile').dataset.value = (100*hhs_total[idx_2013]) / hhs_max
         const bars_detail = document.querySelectorAll('.bar-detail');
         bars_detail.forEach(bar => {
             const value = bar.dataset.value;
@@ -479,7 +679,7 @@
         });
     })
     map.addControl(new mapboxgl.AttributionControl({
-        customAttribution: 'Map: Andrew Lindstrom | Source: Metro RLIS, US Census Bureau'
+        customAttribution: 'Map: Andrew Lindstrom | Source: Metro RLIS, US Census Bureau, TriMet'
     }));
     
 </script>
